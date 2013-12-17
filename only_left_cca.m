@@ -2,7 +2,8 @@ function [] = only_left_cca(corpus_path, dict_path, context_specifier, kappa, k,
 
 disp('> Loading corpus');
 tic;
-W = dlmread(corpus_path);
+
+load(corpus_path, 'W');
 n = length(W);
 v = max(W);
 
@@ -17,34 +18,20 @@ tic;
 whiten_center = power((histc(W, [1:v]) + kappa) / n, -0.5);
 
 if strcmp(context_specifier, 'r1')
-    covariance_view1_index = W(1:n-1);
-    covariance_view2_index = W(2:n);
-    context_length = 1;
+    covariance = create_covariance(W(1:n-1), W(2:n));
 elseif strcmp(context_specifier, 'lr1')
-    covariance_view1_index = vertcat(W(2:n), W(1:n-1));
-    covariance_view2_index = vertcat(W(1:n-1), v + W(2:n));
-    context_length = 2;
+    covariance = horzcat(create_covariance(W(2:n), W(1:n-1)), create_covariance(W(1:n-1), W(2:n)));
 elseif strcmp(context_specifier, 'lr2')
-    covariance_view1_index = vertcat(W(3:n), W(2:n), W(1:n-1), W(1:n-2));
-    covariance_view2_index = vertcat(W(1:n-2), v + W(1:n-1), 2 * v + W(2:n), 3 * v + W(3:n));
-    context_length = 4;
+    covariance = horzcat(create_covariance(W(3:n), W(1:n-2)), ...
+                         create_covariance(W(2:n), W(1:n-1)), ...
+                         create_covariance(W(1:n-1), W(2:n)), ...
+                         create_covariance(W(1:n-2), W(3:n)));
 else
     disp('Invalid context specifier.');
     return;
 end
 
 clear W;
-
-value = zeros(length(covariance_view1_index), 1);
-
-for i=1:length(covariance_view1_index)
-    value(i) = whiten_center(covariance_view1_index(i)) ...
-                * whiten_center(rem(covariance_view2_index(i) - 1, v) + 1) ...
-                / n;
-end
-
-covariance = sparse(covariance_view1_index, covariance_view2_index, value, v, context_length * v);
-clear covariance_view1_index covariance_view2_index value;
 
 toc;
 
@@ -98,6 +85,13 @@ dlmwrite(path, D);
         fclose(fi);
     end
 
+    function covariance_part = create_covariance(index1, index2)
+        value = zeros(length(index1), 1);
+        for i=1:length(index1)
+            value(i) = whiten_center(index1(i)) * whiten_center(index2(i)) / n;
+        end
+        covariance_part = sparse(index1, index2, value, v, v);
+    end
 
 end
 
