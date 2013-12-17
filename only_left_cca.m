@@ -1,4 +1,4 @@
-function [] = only_left_cca(corpus_path, dict_path, context_specifier, kappa, k, result_path)
+function [] = only_left_cca(corpus_path, context_specifier, kappa, k, result_path)
 
 disp('> Loading corpus');
 tic;
@@ -53,12 +53,12 @@ clear whiten_center;
 
 word_norm = normr(V);
 path = sprintf('%s/word_norm', result_path);
-write_embedding(path, word_norm);
+dlmwrite(path, word_norm, ' ');
 clear word_norm;
 
 word_norm_direction_norm = normr(normc(V));
 path = sprintf('%s/word_norm_direction_norm', result_path);
-write_embedding(path, word_norm_direction_norm);
+dlmwrite(path, word_norm_direction_norm, ' ');
 clear word_norm_direction_norm;
 
 path = sprintf('%s/corr', result_path);
@@ -66,23 +66,6 @@ dlmwrite(path, D);
 
     function y = Afun(x)
         y = covariance * (covariance' * x);
-    end
-
-    function [] = write_embedding(path, embedding)
-        fi = fopen(dict_path, 'r');
-        fo = fopen(path, 'W');
-
-        for i=1:v
-            line = fgetl(fi);
-            fprintf(fo, '%s', line);
-            for j = 1:k
-                fprintf(fo, ' %f', embedding(i, j));
-            end
-            fprintf(fo, '\n');
-        end
-
-        fclose(fo);
-        fclose(fi);
     end
 
     function covariance_part = create_covariance(index1, index2)
