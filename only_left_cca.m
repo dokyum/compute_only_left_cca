@@ -13,17 +13,17 @@ tic;
 
 whiten_center = power((histc(W, [1:v]) + kappa) / n, -0.5);
 
-if context_specifier == 'r1'
+if strcmp(context_specifier, 'r1')
     covariance_view1_index = W(1:n-1);
     covariance_view2_index = W(2:n);
     context_length = 1;
-elseif context_specifier == 'lr1'
+elseif strcmp(context_specifier, 'lr1')
     covariance_view1_index = vertcat(W(2:n), W(1:n-1));
     covariance_view2_index = vertcat(W(1:n-1), v + W(2:n));
     context_length = 2;
-elseif context_specifier == 'lr2'
+elseif strcmp(context_specifier, 'lr2')
     covariance_view1_index = vertcat(W(3:n), W(2:n), W(1:n-1), W(1:n-2));
-    covariance_view2_index = vertcat(W(1:n-2), v + W(1:, n-1), 2 * v + W(2:n), 3 * v + W(3:n));
+    covariance_view2_index = vertcat(W(1:n-2), v + W(1:n-1), 2 * v + W(2:n), 3 * v + W(3:n));
     context_length = 4;
 else
     disp('Invalid context specifier.');
