@@ -1,14 +1,17 @@
 function [] = only_left_cca(corpus_path, dict_path, context_specifier, kappa, k, result_path)
 
-disp('Loading corpus');
+disp('> Loading corpus');
 tic;
 W = dlmread(corpus_path);
 n = length(W);
 v = max(W);
+
+fprintf('# tokens: %d\n', n);
+fprintf('# vocabs: %d\n', v);
+
 toc;
 
-
-disp('Prepare matrices');
+disp('> Prepare matrices');
 tic;
 
 whiten_center = power((histc(W, [1:v]) + kappa) / n, -0.5);
@@ -32,26 +35,29 @@ end
 
 clear W;
 
-covariance = sparse(covariance_view1_index, covariance_view2_index, 1, v, context_length * v) / n;
+value = zeros(length(covariance_view1_index), 1);
 
-clear covariance_view1_index covariance_view2_index;
+for i=1:length(covariance_view1_index)
+    value(i) = whiten_center(covariance_view1_index(i)) ...
+                * whiten_center(rem(covariance_view2_index(i) - 1, v) + 1) ...
+                / n;
+end
 
-covariance = bsxfun(@times, covariance, whiten_center);
-whiten_context = repmat(whiten_center', 1, context_length);
-covariance = bsxfun(@times, covariance, whiten_context);
-
-clear whiten_context;
+covariance = sparse(covariance_view1_index, covariance_view2_index, value, v, context_length * v);
+clear covariance_view1_index covariance_view2_index value;
 
 toc;
 
-disp('Performing eigs');
+disp('> Performing eigs');
 tic;
 opts.issym = 1;
 [V, D, flag] = eigs(@Afun, v, k, 'lm', opts);
-disp(flag);
+fprintf('Return code = %d\n', flag);
+D = sqrt(diag(D));
 
 toc;
 
+disp('> Writing');
 clear covariance;
 
 V = bsxfun(@times, V, whiten_center);
