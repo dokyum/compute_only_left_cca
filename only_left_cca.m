@@ -20,12 +20,26 @@ whiten_center = power((histc(W, [1:v]) + kappa) / n, -0.5);
 if strcmp(context_specifier, 'r1')
     covariance = create_covariance(W(1:n-1), W(2:n));
 elseif strcmp(context_specifier, 'lr1')
-    covariance = horzcat(create_covariance(W(2:n), W(1:n-1)), create_covariance(W(1:n-1), W(2:n)));
+    part1 = create_covariance(W(2:n), W(1:n-1));
+    covariance = horzcat(part1, part1');
+    clear part1;
 elseif strcmp(context_specifier, 'lr2')
-    covariance = horzcat(create_covariance(W(3:n), W(1:n-2)), ...
-                         create_covariance(W(2:n), W(1:n-1)), ...
-                         create_covariance(W(1:n-1), W(2:n)), ...
-                         create_covariance(W(1:n-2), W(3:n)));
+    part1 = create_covariance(W(2:n), W(1:n-1));
+    covariance = horzcat(part1, part1');
+    clear part1;
+    part2 = create_covariance(W(3:n), W(1:n-2));
+    covariance = horzcat(part2, covariance, part2');
+    clear part2;
+elseif strcmp(context_specifier, 'lr3')
+    part1 = create_covariance(W(2:n), W(1:n-1));
+    covariance = horzcat(part1, part1');
+    clear part1;
+    part2 = create_covariance(W(3:n), W(1:n-2));
+    covariance = horzcat(part2, covariance, part2');
+    clear part2;
+    part3 = create_covariance(W(4:n), W(1:n-3));
+    covariance = horzcat(part3, covariance, part3');
+    clear part3;
 else
     disp('Invalid context specifier.');
     return;
